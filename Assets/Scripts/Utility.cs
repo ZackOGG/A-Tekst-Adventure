@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 
 enum Options {Go_North, Go_East, Go_South, Go_West, Open_Inventory, Talk_To_NPC, Investigae_Area }
+public enum Item_Type {Weapon, Consumable, Miscellaneous}
 
 
 [System.Serializable]
@@ -16,16 +17,23 @@ public class OptionContents
     public string carryOutText;
     [Tooltip ("Is an Item needed")]
     public ItemNeeded itemNeeded;
+    [Tooltip ("Is it an investigation")]
+    public bool investigate;
+    [Tooltip ("This is the text desplayed about their investigation")]
+    public string investigationText;
 }
 
 [System.Serializable]
 public class ItemNeeded
 {
     public bool needItem = false;
-    public Item item;
+    public Item_ImplementOut item;
 }
 [System.Serializable]
-public struct Item
+public struct Item_ImplementOut
 {
     public string itemName;
+    public bool isWeapon;
+    public int damage;
+    public bool isConsumable;
 }
