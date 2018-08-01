@@ -34,14 +34,21 @@ public class Node_Controller : MonoBehaviour {
     public bool waitingForPlayer = true;
     public bool waitingToContinueToNextNode = false;
     public bool waitingToInvestigate = false;
-    public bool waitingForInventoryOption = false;
+    public bool lookingAtInventory = false;
+    public bool lookingAtItem = false;
+    public bool waitingToUseItem = false;
     private int[] optionOrder;
     public OptionContents[] options = new OptionContents[6];
+    public Item[] ItemOptions;
+    
     public bool upAndDownPressed;
     public bool leftAndRightPressed;
     private Node_Controller selectedRoute;
     private Game_Manager gameManager;
     public static Vector3[] optionPosition;
+    private bool isInventoryAction = false;
+    public Item[] inventoryItems;
+    public Item holdingItem;
     // Use this for initialization
    
 
@@ -125,14 +132,19 @@ public class Node_Controller : MonoBehaviour {
             WaitingToContinueToNextNode();
         }
        
-        if(waitingForInventoryOption)
+        if(lookingAtInventory)
         {
-            print("Waiting for inventory OPTION");
+            LookingAtInventory();
         }
 
         if(waitingToInvestigate)
         {
             WaitingToInvestigate();
+        }
+
+        if(lookingAtItem == true)
+        {
+            LookingAtItem();
         }
     }
 
@@ -156,19 +168,149 @@ public class Node_Controller : MonoBehaviour {
             ChangeNode(selectedRoute);
         }
     }
+    //===== Inventory =====
 
-    private void WaitingToCheckInventory()
+    private void ReadInventoryOptions()
     {
-        print("Waiting to finsihed checking inventory");
-        if (Input.GetKeyDown(KeyCode.UpArrow) || (Input.GetKeyDown(KeyCode.RightArrow)) || (Input.GetKeyDown(KeyCode.DownArrow)) || (Input.GetKeyDown(KeyCode.LeftArrow)))
-        {            
-            waitingForInventoryOption = false;
-            ReadOptions();
-            OpeningDescription();
-        }
+        //Change button one to read option one + Text
+        //Change button two to read option two + Text
+        //Change button three to read option three + Text
+        //change button four to read option four + Text 
+        int arrayNum = 0;
+        int newLocationInt = 0;
+        foreach (Item theItem in gameManager.inventoryItems)
+        {
+            
+            if (theItem != null &&  arrayNum <= 3 ) // https://www.experts-exchange.com/questions/28076128/string-IsNullOrEmpty-throws-object-reference-is-null-error.html
+            {
+                //print(userInputText[arrayNum] + contents.optionText);
+                textLocations[arrayNum].gameObject.SetActive(true);
+                textLocations[arrayNum].text = theItem.itemName;
+                MoveOptionToLocation(textLocations[arrayNum].gameObject, newLocationInt);
+                newLocationInt++;
+            }      
+            else if(arrayNum == 4)
+            {
+                textLocations[arrayNum].gameObject.SetActive(true);
+                textLocations[arrayNum].text = "Close Inventory";
+                MoveOptionToLocation(textLocations[arrayNum].gameObject, newLocationInt);
+                newLocationInt++;
+            }
+            else
+            {
+                textLocations[arrayNum].gameObject.SetActive(false);
+            }
+            arrayNum++;
+        }   
+        
 
     }
 
+    private void LookingAtInventory()
+    {
+        print("Waiting to finsihed checking inventory");
+        if (Input.GetKeyDown(KeyCode.UpArrow) || (Input.GetKeyDown(KeyCode.RightArrow)) || (Input.GetKeyDown(KeyCode.DownArrow)) || (Input.GetKeyDown(KeyCode.LeftArrow)))
+        {
+            //Open the items options
+            StartCoroutine(DetectDuelKeyLatancyInventory());
+        }
+    }
+
+    private void LookingAtItem()
+    {
+        print("Looking at item");
+    }
+    
+
+    private void ReadTheItemsOptions(Item theItem)
+    {
+        //Read the item options
+        //=====Item use Option=====
+        textLocations[0].gameObject.SetActive(true);
+        if(theItem.theItemsOptionsVariables.theItemsOption  == global::ItemOptions.Open_Lock)
+        {
+            print(theItem.name + " This item can open doors");
+            textLocations[0].text = "Atempt to open door.";
+        }
+        if(theItem.theItemsOptionsVariables.theItemsOption == global:: ItemOptions.Consume)
+        {
+            print(theItem.name + " This item can be drunk");
+            textLocations[0].text = theItem.theItemsOptionsVariables.consumdeDescription;
+        }
+        if (theItem.theItemsOptionsVariables.theItemsOption == global::ItemOptions.Attack)
+        {
+            print(theItem.name + " This item can kill");
+            //TODO Implement attack thins near by
+        }     
+        //=====Inspect the item=====
+        textLocations[1].text = "Inspect";
+
+        //=====Destroy the item=====        
+        if(theItem.theItemsOptionsVariables.destroyable)
+        {
+            textLocations[2].text = "Destroy";
+        }            
+        else
+        {
+            textLocations[2].gameObject.SetActive(false);
+        }
+        //=====Go back=====
+        textLocations[3].gameObject.SetActive(false);
+        textLocations[4].text = "Go back to inventory";
+        if(!theItem.theItemsOptionsVariables.destroyable)
+        {
+            MoveOptionToLocation(textLocations[4].gameObject, 2);
+        }
+        else
+        {
+            MoveOptionToLocation(textLocations[4].gameObject, 3);
+        }
+    }
+
+    private void SelectInventoryItemToLookAt()
+    {
+        //Read how the action happens
+        //Make waiting for player false
+        //Make waiting to continue true;
+        //If an item is needed and the player set need an item to true
+
+        if (Input.GetKey(KeyCode.UpArrow) && !upAndDownPressed && options[0].carryOutText != "")
+        {
+
+            narationText.text = ("You hold a " + inventoryItems[0].description);
+            ReadTheItemsOptions(inventoryItems[0]);
+            lookingAtItem = true;
+            holdingItem = inventoryItems[0];
+           
+        }
+        if (Input.GetKey(KeyCode.RightArrow) && !leftAndRightPressed && options[1].carryOutText != "")
+        {
+            
+
+        }
+        if (Input.GetKey(KeyCode.DownArrow) && !upAndDownPressed && options[2].carryOutText != "")
+        {
+            
+
+        }
+        if (Input.GetKey(KeyCode.LeftArrow) && !leftAndRightPressed && options[3].carryOutText != "")
+        {
+           
+        }
+        if (upAndDownPressed)
+        {   //Go Back
+            SetInputText();
+            OpeningDescription();
+            SetOptions();
+            ReadOptions();
+            lookingAtInventory = false;
+            waitingForPlayer = true;
+        }       
+        upAndDownPressed = false;
+        leftAndRightPressed = false;
+    }
+
+    //=======================
     private void WaitingToInvestigate() // Waiting for the player to continue from investigating
     {
         print("Waiting to finish investigating");
@@ -205,9 +347,9 @@ public class Node_Controller : MonoBehaviour {
         //Make waiting for player false
         //Make waiting to continue true;
         //If an item is needed and the player set need an item to true
-        
+
         if (Input.GetKey(KeyCode.UpArrow) && !upAndDownPressed && options[0].carryOutText != "")
-        {        
+        {
 
             narationText.text = ("You " + options[0].optionText + " Press any arrow to continue");
             selectedRoute = options[0].nextNode;
@@ -280,11 +422,11 @@ public class Node_Controller : MonoBehaviour {
                 waitingToInvestigate = true;
                 narationText.text = options[5].investigationText + (" Press any arrow to continue");
             }
-            else if(options[4].optionText == "open inventory.")
+            else if (options[4].optionText == "open inventory.")
             {
                 print("Opening Inventory");
                 waitingForPlayer = false;
-                waitingForInventoryOption = true;
+                lookingAtInventory = true;
                 ReadInventoryOptions();
             }
             else
@@ -298,12 +440,12 @@ public class Node_Controller : MonoBehaviour {
             narationText.text = ("You " + options[4].optionText + " Press any arrow to continue");
             selectedRoute = options[5].nextNode;
             waitingForPlayer = false;
-            
-            if(options[5].investigate == true)
+
+            if (options[5].investigate == true)
             {
                 waitingToInvestigate = true;
                 narationText.text = options[5].investigationText + (" Press any arrow to continue");
-               
+
             }
             else
             {
@@ -311,18 +453,9 @@ public class Node_Controller : MonoBehaviour {
                 selectedRoute = options[5].nextNode;
             }
             leftAndRightPressed = false;
-            
+
         }
         //waitingForPlayer = true;
-    }
-
-    private void OptionToUseItem()
-    {
-       if(Input.GetKeyDown(KeyCode.UpArrow))
-        {
-            //set need an item to false
-            //Execute options
-        }
     }
     
     private void ChangeNode(Node_Controller nodeCon)
@@ -332,34 +465,7 @@ public class Node_Controller : MonoBehaviour {
         gameManager.MoveToNode(nodeCon);
     }
 
-   private void ReadInventoryOptions()
-    {
-        //Change button one to read option one + Text
-        //Change button two to read option two + Text
-        //Change button three to read option three + Text
-        //change button four to read option four + Text 
-        int arrayNum = 0;
-        int newLocationInt = 0;
-        foreach (Item theItem in gameManager.inventoryItems)
-        {
-
-            if (theItem != null) // https://www.experts-exchange.com/questions/28076128/string-IsNullOrEmpty-throws-object-reference-is-null-error.html
-            {
-                //print(userInputText[arrayNum] + contents.optionText);
-                textLocations[arrayNum].gameObject.SetActive(true);
-                textLocations[arrayNum].text = theItem.itemName;
-                MoveOptionToLocation(textLocations[arrayNum].gameObject, newLocationInt);
-                newLocationInt++;
-            }
-            else
-            {
-                textLocations[arrayNum].gameObject.SetActive(false);
-            }
-            arrayNum++;
-        }
-
-        waitingForPlayer = true;
-    }
+   
 
     private IEnumerator DetectDuelKeyLatancy()
     {
@@ -373,7 +479,28 @@ public class Node_Controller : MonoBehaviour {
         {
             leftAndRightPressed = true;
         }
-        AtemptAction();
+        if(!isInventoryAction)
+        {
+            AtemptAction();
+        }
+  
+        
+        
+    }
+    private IEnumerator DetectDuelKeyLatancyInventory()
+    {
+        lookingAtInventory = false;
+        yield return new WaitForSeconds(duelKeyLatancy);
+        if(Input.GetKey(KeyCode.UpArrow) && Input.GetKey(KeyCode.DownArrow))
+        {
+            upAndDownPressed = true;
+        }
+        if(Input.GetKey(KeyCode.LeftArrow) && Input.GetKey(KeyCode.RightArrow))
+        {
+            leftAndRightPressed = true;
+        }
+        SelectInventoryItemToLookAt();
+        
         
     }
 
@@ -384,4 +511,4 @@ public class Node_Controller : MonoBehaviour {
     }
 }
 
-//TODO WAITING FOR PLAYER BEING TURNED ON WHEN SHOULD NOT BE
+//TODO Next: create an options list that are what options the item gives

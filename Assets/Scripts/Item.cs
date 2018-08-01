@@ -6,6 +6,9 @@ public class Item : ScriptableObject
 {
     public Item_Type itemType;
     public string itemName;
+    public string description;
+    public ItemOptionConstructior theItemsOptionsVariables;
+
     //[Tooltip("How many times it can be used before destoyed. EG a potion can have two doses but a tinderbox might have 20. If -1 then there is no limit" )]
     //public int charges;
     //[Tooltip("The mesage when inspected")]

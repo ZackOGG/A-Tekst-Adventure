@@ -25,20 +25,21 @@ public class Game_Manager : MonoBehaviour {
     {
         SetBagSize();
         SetOptionPos();
-        StartFirstNode();
         AddItemToInventory(testItem);
         AddItemToInventory(testItemTwo);
         AddItemToInventory(testItemTwo);
         AddItemToInventory(testItemTwo);
         AddItemToInventory(testItemTwo);
         AddItemToInventory(testItemTwo);
-        
+        StartFirstNode();
+
     }
 
     private void StartFirstNode()
     {
         SetNewNodeUI();
         activeNode.gameObject.SetActive(true);
+        activeNode.inventoryItems = inventoryItems;
        
     }
 
